@@ -14,5 +14,30 @@ class Rotor (Mapping):
         self.wiring=self.wiring[1:]+self.wiring[:1]
 class Reflector (Mapping):
     pass
-class PlugBoard (Mapping):
-    pass
+class Plugboard (Mapping):
+    def __init__(self,connections: list[list[int]]=[],size=26):
+        '''Initialize the plugboard with a list of connections.
+        Warning: There is no filter for invalid connections'''
+        wiring=[i for i in range(size)]
+        for i,j in connections:
+            wiring[i]=j
+            wiring[j]=i
+        super().__init__(wiring)
+    def add_connection(self,i,j=None):
+        '''Add connection between i and j. Input could also be a list or a tuple
+        Warning: There is no filter for invalid or overlapping connections'''
+        if j==None:
+            i,j=i
+        self.wiring[i]=j
+        self.wiring[j]=i
+    def remove_connection(self,i,j=None):
+        '''Remove connection between i and j. Input could also be a list or a tuple
+        Warning: There is no filter for invalid or non-existing connections'''
+        if j==None:
+            i,j=i
+        self.wiring[i]=i
+        self.wiring[j]=j
+    def remove_all_connection(self):
+        '''Remove every connections on the plugboard'''
+        for i in range(len(self.wiring)):
+            self.wiring[i]=i
