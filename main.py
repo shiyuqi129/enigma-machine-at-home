@@ -1,23 +1,44 @@
 class Mapping:
     def __init__(self,wiring: list[int]):
-        '''Wiring should be every number from 0-n once in any order. 
-        Warning: There is no filter for invalid wiring'''
+        '''Wiring should be numbers from 0-n exactly once each in any order where n is the length of wiring'''
+        if not isinstance(wiring,list):
+            raise TypeError("wiring must be a list")
+        if any(not isinstance(x,int) for x in wiring):
+            raise TypeError("wiring must be a list of integer")
+        if sorted(wiring)!=list(range(len(wiring))):
+            raise ValueError("Wiring should be numbers from 0-n exactly once each where n is the length of wiring")
         self.wiring=wiring[:]
         self.size=len(wiring)
-    def _encode(self,letter_index: int) -> int | None:
-        '''Given a number, return the result of the encoding according to the wiring. Return None if input is out of range'''
-        if letter_index>len(self.wiring) or letter_index<0:
-            return None
+    def _encode(self,letter_index: int) -> int:
+        '''Given a number, return the result of the encoding according to the wiring.'''
+        if not isinstance(letter_index,int):
+            raise TypeError("Mapping input must be an integer")
+        if letter_index>self.size or letter_index<0:
+            raise ValueError("Input out of range")
         return self.wiring[letter_index]
     def _decode(self,letter_index: int) -> int | None:
-        '''Given a number, return the result of the decoding mapping according to the wiring. Return None if input is out of range'''
-        if letter_index>len(self.wiring) or letter_index<0:
-            return None
+        '''Given a number, return the result of the decoding according to the wiring.'''
+        if not isinstance(letter_index,int):
+            raise TypeError("Mapping input must be an integer")
+        if letter_index>self.size or letter_index<0:
+            raise ValueError("Input out of range")
         return self.wiring.index(letter_index)
+
 class Rotor (Mapping):
     def __init__(self,wiring: list[int],notches: list[int] =[],initial_position: int =0):
-        '''Initialize a rotor is the given wiring with a list of notch position and set it at an initial position.
-        Warning: No check for invalid input'''
+        '''Initialize a rotor is the given wiring with a list of notch position and set it at an initial position.'''
+        if not isinstance(initial_position,int):
+            raise TypeError("initial_position should be an integer")
+        if not isinstance(wiring,list):
+            raise TypeError("wiring must be a list")
+        if initial_position<0 or initial_position>=len(wiring):
+            raise ValueError("initial_position out of range")
+        if not isinstance(notches,list):
+            raise TypeError("notches must be a list")
+        if any(not isinstance(x,int) for x in notches):
+            raise TypeError("notches must be a list of integer")
+        if any(x<0 or x>=len(wiring) for x in notches):
+            raise ValueError("Some of the notches are out of range")
         self.position=initial_position
         self.notches=notches
         super().__init__(wiring[initial_position:]+wiring[:initial_position])
@@ -30,20 +51,16 @@ class Rotor (Mapping):
     def backward(self,letter_index: int) -> int | None:
         '''Given a input from the direction of the reflector, return the output of the rotor'''
         return super()._decode(letter_index)
+    
 class Reflector (Mapping):
     def __init__(self,wiring: list[int]):
-        if not isinstance(wiring,list):
-            raise TypeError("wiring must be a list")
-        if any(not isinstance(x,int) for x in wiring):
-            raise TypeError("wiring must be a list of integer")
-        if any(x<0 or x>=len(wiring) for x in wiring):
-            raise ValueError("Integers in wiring must be non-negative and less than the length of wiring")
         if any(wiring[x]!=wiring.index(x) for x in wiring):
             raise ValueError("The wiring lead to a reflector that is not reflective")
         super().__init__(wiring)
     def reflect(self,letter_index: int) -> int | None:
         '''Given a input, return the output of the reflector'''
         return super()._encode(letter_index)
+
 class Plugboard (Mapping):
     def __init__(self,connections: list[list[int]]=[],size: int=26):
         '''Initialize the plugboard with a list of connections.'''
@@ -73,17 +90,31 @@ class Plugboard (Mapping):
         '''Given a input, return the output of the plugboard'''
         return super()._encode(letter_index)
     def add_connection(self,i,j=None) -> None:
-        '''Add connection between i and j. Input could also be a list or a tuple
-        Warning: There is no filter for invalid or overlapping connections'''
+        '''Add connection between i and j. Input could also be two integers, a list, or a tuple'''
         if j==None:
+            if not isinstance(i,(list,tuple)):
+                raise TypeError("Input must also be two integers in a list, a tuple, or seperated")
+            if len(i)!=2:
+                raise ValueError("Input must also be exactly two integers")
             i,j=i
+        if not (isinstance(i,int) and isinstance(j,int)):
+            raise TypeError("Input must be integers")
+        if self.wiring[i]!=i or self.wiring[j]!=j:
+            raise ValueError("Conflict with existing connection")
         self.wiring[i]=j
         self.wiring[j]=i
     def remove_connection(self,i,j=None) -> None:
-        '''Remove connection between i and j. Input could also be a list or a tuple
-        Warning: There is no filter for invalid or non-existing connections'''
+        '''Remove connection between i and j. Input could also be a list or a tuple'''
         if j==None:
+            if not isinstance(i,(list,tuple)):
+                raise TypeError("Input must also be two integers in a list, a tuple, or seperated")
+            if len(i)!=2:
+                raise ValueError("Input must also be exactly two integers")
             i,j=i
+        if not (isinstance(i,int) and isinstance(j,int)):
+            raise TypeError("Input must be integers")
+        if self.wiring[i]!=j or self.wiring[j]!=i:
+            raise ValueError("Non-existing connection")
         self.wiring[i]=i
         self.wiring[j]=j
     def remove_all_connection(self) -> None:
