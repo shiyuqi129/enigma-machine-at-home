@@ -9,6 +9,7 @@ class Mapping:
             raise ValueError("Wiring should be numbers from 0-n exactly once each where n is the length of wiring")
         self.wiring=wiring[:]
         self.size=len(wiring)
+
     def _encode(self,letter_index: int) -> int:
         '''Given a number, return the result of the encoding according to the wiring.'''
         if not isinstance(letter_index,int):
@@ -16,13 +17,15 @@ class Mapping:
         if letter_index>self.size or letter_index<0:
             raise ValueError("Input out of range")
         return self.wiring[letter_index]
-    def _decode(self,letter_index: int) -> int | None:
+    
+    def _decode(self,letter_index: int) -> int:
         '''Given a number, return the result of the decoding according to the wiring.'''
         if not isinstance(letter_index,int):
             raise TypeError("Mapping input must be an integer")
         if letter_index>self.size or letter_index<0:
             raise ValueError("Input out of range")
         return self.wiring.index(letter_index)
+
 
 class Rotor (Mapping):
     def __init__(self,wiring: list[int],notches: list[int] =[],initial_position: int =0):
@@ -42,24 +45,44 @@ class Rotor (Mapping):
         self.position=initial_position
         self.notches=notches
         super().__init__(wiring[initial_position:]+wiring[:initial_position])
+
     def rotate(self) -> None:
         '''Rotate left by 1 space'''
         self.wiring=self.wiring[1:]+self.wiring[:1]
-    def forward(self,letter_index: int) -> int | None:
+        self.position+=1
+        self.position%=self.size
+
+    def forward(self,letter_index: int) -> int:
         '''Given a input from the direction of the entry wheel, return the output of the rotor'''
         return super()._encode(letter_index)
-    def backward(self,letter_index: int) -> int | None:
+    
+    def backward(self,letter_index: int) -> int:
         '''Given a input from the direction of the reflector, return the output of the rotor'''
         return super()._decode(letter_index)
     
+    def is_at_notch(self) -> bool:
+        return self.position in self.notches
+    
+    def set_position(self,new_position: int) -> None:
+        if not isinstance(new_position,int):
+            raise TypeError("new_position should be an integer")
+        if new_position<0 or new_position>=self.size:
+            raise ValueError("new_position out of range")
+        offset=(new_position-self.position+self.size)%self.size
+        self.wiring=self.wiring[offset:]+self.wiring[:offset]
+        self.position=new_position
+
+
 class Reflector (Mapping):
     def __init__(self,wiring: list[int]):
         if any(wiring[x]!=wiring.index(x) for x in wiring):
             raise ValueError("The wiring lead to a reflector that is not reflective")
         super().__init__(wiring)
-    def reflect(self,letter_index: int) -> int | None:
+
+    def reflect(self,letter_index: int) -> int:
         '''Given a input, return the output of the reflector'''
         return super()._encode(letter_index)
+
 
 class Plugboard (Mapping):
     def __init__(self,connections: list[list[int]]=[],size: int=26):
@@ -86,9 +109,11 @@ class Plugboard (Mapping):
             wiring[i]=j
             wiring[j]=i
         super().__init__(wiring)
-    def swap(self,letter_index: int) -> int | None:
+
+    def swap(self,letter_index: int) -> int:
         '''Given a input, return the output of the plugboard'''
         return super()._encode(letter_index)
+    
     def add_connection(self,i,j=None) -> None:
         '''Add connection between i and j. Input could also be two integers, a list, or a tuple'''
         if j==None:
@@ -99,10 +124,13 @@ class Plugboard (Mapping):
             i,j=i
         if not (isinstance(i,int) and isinstance(j,int)):
             raise TypeError("Input must be integers")
+        if i<0 or i>=self.size or j<0 or j>=self.size:
+            raise ValueError("Connection contain index out of range")
         if self.wiring[i]!=i or self.wiring[j]!=j:
             raise ValueError("Conflict with existing connection")
         self.wiring[i]=j
         self.wiring[j]=i
+
     def remove_connection(self,i,j=None) -> None:
         '''Remove connection between i and j. Input could also be a list or a tuple'''
         if j==None:
@@ -113,10 +141,13 @@ class Plugboard (Mapping):
             i,j=i
         if not (isinstance(i,int) and isinstance(j,int)):
             raise TypeError("Input must be integers")
+        if i<0 or i>=self.size or j<0 or j>=self.size:
+            raise ValueError("Connection contain index out of range")
         if self.wiring[i]!=j or self.wiring[j]!=i:
             raise ValueError("Non-existing connection")
         self.wiring[i]=i
         self.wiring[j]=j
+
     def remove_all_connection(self) -> None:
         '''Remove every connections on the plugboard'''
         for i in range(len(self.wiring)):
