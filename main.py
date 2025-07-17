@@ -28,23 +28,28 @@ class Mapping:
 
 
 class Rotor (Mapping):
-    def __init__(self,wiring: list[int],notches: list[int] =[],initial_position: int =0):
-        '''Initialize a rotor is the given wiring with a list of notch position and set it at an initial position.'''
+    def __init__(self,wiring: list[int],notches: list[int] =[],initial_position: int =0, ring_position:int =0):
+        '''Initialize a rotor is the given wiring with a list of notch position and set it at an initial position and ring position. initial_position and notches is according to the alphabet ring'''
         if not isinstance(initial_position,int):
             raise TypeError("initial_position should be an integer")
+        if not isinstance(initial_position,int):
+            raise TypeError("ring_position should be an integer")
         if not isinstance(wiring,list):
             raise TypeError("wiring must be a list")
         if initial_position<0 or initial_position>=len(wiring):
             raise ValueError("initial_position out of range")
+        if ring_position<0 or ring_position>=len(wiring):
+            raise ValueError("ring_position out of range")
         if not isinstance(notches,list):
             raise TypeError("notches must be a list")
         if any(not isinstance(x,int) for x in notches):
             raise TypeError("notches must be a list of integer")
         if any(x<0 or x>=len(wiring) for x in notches):
             raise ValueError("Some of the notches are out of range")
-        self.position=initial_position
+        self.position=(initial_position+ring_position)%len(wiring)
+        self.ring_position=ring_position
         self.notches=notches
-        super().__init__(wiring[initial_position:]+wiring[:initial_position])
+        super().__init__(wiring[self.position:]+wiring[:self.position])
 
     def rotate(self) -> None:
         '''Rotate left by 1 space'''
@@ -61,16 +66,26 @@ class Rotor (Mapping):
         return super()._decode(letter_index)
     
     def is_at_notch(self) -> bool:
-        return self.position in self.notches
+        return (self.position-self.ring_position)%self.size in self.notches
     
     def set_position(self,new_position: int) -> None:
+        '''Use the new_position according to the alphabet ring'''
         if not isinstance(new_position,int):
             raise TypeError("new_position should be an integer")
         if new_position<0 or new_position>=self.size:
             raise ValueError("new_position out of range")
-        offset=(new_position-self.position+self.size)%self.size
+        new_position=(new_position+self.ring_position)%self.size
+        offset=(new_position-self.position)%self.size
         self.wiring=self.wiring[offset:]+self.wiring[:offset]
         self.position=new_position
+
+    def set_ring_position(self,new_ring_position: int) -> None:
+        '''Set the alphabet ring to a new position'''
+        if not isinstance(new_ring_position,int):
+            raise TypeError("new_ring_position should be an integer")
+        if new_ring_position<0 or new_ring_position>=self.size:
+            raise ValueError("new_ring_position out of range")
+        self.ring_position=new_ring_position
 
 
 class Reflector (Mapping):
