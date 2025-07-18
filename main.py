@@ -1,5 +1,5 @@
 class Mapping:
-    def __init__(self,wiring: list[int]):
+    def __init__(self,wiring: list[int]) -> None:
         '''Wiring should be numbers from 0-n exactly once each in any order where n is the length of wiring'''
         if not isinstance(wiring,list):
             raise TypeError("wiring must be a list")
@@ -28,7 +28,7 @@ class Mapping:
 
 
 class Rotor (Mapping):
-    def __init__(self,wiring: list[int],notches: list[int] =[],initial_position: int =0, ring_position:int =0):
+    def __init__(self,wiring: list[int],notches: list[int] =[],initial_position: int =0, ring_position:int =0) -> None:
         '''Initialize a rotor is the given wiring with a list of notch position and set it at an initial position and ring position. initial_position and notches is according to the alphabet ring'''
         if not isinstance(initial_position,int):
             raise TypeError("initial_position should be an integer")
@@ -89,7 +89,7 @@ class Rotor (Mapping):
 
 
 class Reflector (Mapping):
-    def __init__(self,wiring: list[int]):
+    def __init__(self,wiring: list[int]) -> None:
         if any(wiring[x]!=wiring.index(x) for x in wiring):
             raise ValueError("The wiring lead to a reflector that is not reflective")
         super().__init__(wiring)
@@ -100,7 +100,7 @@ class Reflector (Mapping):
 
 
 class Plugboard (Mapping):
-    def __init__(self,connections: list[list[int]]=[],size: int=26):
+    def __init__(self,size: int=26,connections: list[list[int]]=[]) -> None:
         '''Initialize the plugboard with a list of connections.'''
         if not isinstance(size,int):
             raise TypeError("size must be an integer")
@@ -167,3 +167,42 @@ class Plugboard (Mapping):
         '''Remove every connections on the plugboard'''
         for i in range(len(self.wiring)):
             self.wiring[i]=i
+
+
+class Enigma:
+    def __init__(self,rotors:list[Rotor]|None=None,reflector:Reflector|None=None,plugboard:Plugboard|None=None) -> None:
+        if rotors==None and reflector==None and plugboard==None:
+            raise ValueError("You are not allowed to making a machine with nothing in it")
+        if rotors==None:
+            rotors=[]
+        if not isinstance(rotors,list):
+            raise TypeError("rotors must be a list")
+        if not isinstance(reflector,(type(None),Reflector)):
+            raise TypeError("reflector must be of class Reflector")
+        if not isinstance(plugboard,(type(None),Plugboard)):
+            raise TypeError("plugboard must be of class Plugboard")
+        if any(not isinstance(rotor,Rotor) for rotor in rotors):
+            raise TypeError("rotors must be a list rotor of class Rotor")
+        if any(rotor.size!=rotors[0].size for rotor in rotors):
+            raise ValueError("All rotors must have the same size")
+        self.size=None
+        if len(rotors)!=0:
+            self.size=rotors[0].size
+        if self.size==None:
+            if reflector!=None:
+                self.size=reflector.size
+            else:
+                self.size=plugboard.size # type: ignore
+        if reflector==None:
+            reflector=Reflector([i for i in range(self.size)])
+        else:
+            if reflector.size!=self.size:
+                raise ValueError("The components must have the same size")
+        if plugboard==None:
+            plugboard=Plugboard(self.size)
+        else:
+            if plugboard.size!=self.size:
+                raise ValueError("The components must have the same size")
+        self.rotors=rotors[:]
+        self.reflector=reflector
+        self.plugboard=plugboard
