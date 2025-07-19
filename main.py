@@ -185,10 +185,10 @@ class Enigma:
             raise TypeError("rotors must be a list rotor of class Rotor")
         if any(rotor.size!=rotors[0].size for rotor in rotors):
             raise ValueError("All rotors must have the same size")
-        self.size=None
+        self.size:int =-1
         if len(rotors)!=0:
             self.size=rotors[0].size
-        if self.size==None:
+        if self.size==-1:
             if reflector!=None:
                 self.size=reflector.size
             else:
@@ -206,3 +206,34 @@ class Enigma:
         self.rotors=rotors[:]
         self.reflector=reflector
         self.plugboard=plugboard
+    
+    def _step(self) -> None:
+        is_engaged: bool=True
+        for rotor in self.rotors:
+            is_at_notch: bool=rotor.is_at_notch()
+            if is_at_notch or is_engaged:
+                rotor.rotate()
+            is_engaged=is_at_notch
+
+    def _encode(self, input: int) -> int:
+        '''Encode a input without stepping'''
+        if not isinstance(input, int):
+            raise TypeError("input must be an integer")
+        if input<0 or input>=self.size:
+            raise ValueError("input out of range")
+        output=self.plugboard.swap(input)
+        for rotor in self.rotors:
+            output=rotor.forward(output)
+        output=self.reflector.reflect(output)
+        for rotor in reversed(self.rotors):
+            output=rotor.backward(output)
+        return self.plugboard.swap(output)
+
+    def key_press(self,input: int=0) -> int:
+        '''Simulate a key press on a Enigma machine'''
+        if not isinstance(input, int):
+            raise TypeError("input must be an integer")
+        if input<0 or input>=self.size:
+            raise ValueError("input out of range")
+        self._step()
+        return self._encode(input)
