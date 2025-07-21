@@ -170,6 +170,7 @@ class Plugboard (Mapping):
 
 
 class Enigma:
+    
     def __init__(self,rotors:list[Rotor]|None=None,reflector:Reflector|None=None,plugboard:Plugboard|None=None) -> None:
         if rotors==None and reflector==None and plugboard==None:
             raise ValueError("You are not allowed to making a machine with nothing in it")
@@ -237,3 +238,16 @@ class Enigma:
             raise ValueError("input out of range")
         self._step()
         return self._encode(input)
+    
+    def encode_message(self,message: str="") -> str:
+        '''Encode a message using the Enigma machine. The machine must have a size of 26.
+        Will only encode A-Z or a-z, other character will be skipped'''
+        if self.size!=26:
+            raise ValueError("The Enigma must be of size 26 to support encoding message made out of letters")
+        message=message.upper()
+        output: list[str]=[]
+        for c in message:
+            if not c.isalpha():
+                continue
+            output.append(chr(self.key_press(ord(c)-ord("A"))+ord("A")))
+        return "".join(output)
