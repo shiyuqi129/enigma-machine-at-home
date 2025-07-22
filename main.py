@@ -49,21 +49,20 @@ class Rotor (Mapping):
         self.position=(initial_position+ring_position)%len(wiring)
         self.ring_position=ring_position
         self.notches=notches
-        super().__init__(wiring[self.position:]+wiring[:self.position])
+        super().__init__(wiring[:])
 
     def rotate(self) -> None:
         '''Rotate left by 1 space'''
-        self.wiring=self.wiring[1:]+self.wiring[:1]
         self.position+=1
         self.position%=self.size
 
     def forward(self,letter_index: int) -> int:
         '''Given a input from the direction of the entry wheel, return the output of the rotor'''
-        return super()._encode(letter_index)
+        return (super()._encode((letter_index+self.position)%self.size)-self.position)%self.size
     
     def backward(self,letter_index: int) -> int:
         '''Given a input from the direction of the reflector, return the output of the rotor'''
-        return super()._decode(letter_index)
+        return (super()._decode((letter_index+self.position)%self.size)-self.position)%self.size
     
     def is_at_notch(self) -> bool:
         return (self.position-self.ring_position)%self.size in self.notches
@@ -75,8 +74,6 @@ class Rotor (Mapping):
         if new_position<0 or new_position>=self.size:
             raise ValueError("new_position out of range")
         new_position=(new_position+self.ring_position)%self.size
-        offset=(new_position-self.position)%self.size
-        self.wiring=self.wiring[offset:]+self.wiring[:offset]
         self.position=new_position
 
     def set_ring_position(self,new_ring_position: int) -> None:
@@ -170,7 +167,6 @@ class Plugboard (Mapping):
 
 
 class Enigma:
-    
     def __init__(self,rotors:list[Rotor]|None=None,reflector:Reflector|None=None,plugboard:Plugboard|None=None) -> None:
         if rotors==None and reflector==None and plugboard==None:
             raise ValueError("You are not allowed to making a machine with nothing in it")
