@@ -28,26 +28,26 @@ class Mapping:
 
 
 class Rotor (Mapping):
-    def __init__(self,wiring: list[int],notches: list[int] =[],initial_position: int =0, ring_position:int =0) -> None:
-        '''Initialize a rotor is the given wiring with a list of notch position and set it at an initial position and ring position. initial_position and notches is according to the alphabet ring'''
+    def __init__(self,wiring: list[int],notches: list[int] =[],initial_position: int =0, ring_setting:int =0) -> None:
+        '''Initialize a rotor is the given wiring with a list of notch position and set it at an initial position and ring settingh. initial_position and notches is according to the alphabet ring'''
         if not isinstance(initial_position,int):
             raise TypeError("initial_position should be an integer")
         if not isinstance(initial_position,int):
-            raise TypeError("ring_position should be an integer")
+            raise TypeError("ring_setting should be an integer")
         if not isinstance(wiring,list):
             raise TypeError("wiring must be a list")
         if initial_position<0 or initial_position>=len(wiring):
             raise ValueError("initial_position out of range")
-        if ring_position<0 or ring_position>=len(wiring):
-            raise ValueError("ring_position out of range")
+        if ring_setting<0 or ring_setting>=len(wiring):
+            raise ValueError("ring_setting out of range")
         if not isinstance(notches,list):
             raise TypeError("notches must be a list")
         if any(not isinstance(x,int) for x in notches):
             raise TypeError("notches must be a list of integer")
         if any(x<0 or x>=len(wiring) for x in notches):
             raise ValueError("Some of the notches are out of range")
-        self.position=(initial_position+ring_position)%len(wiring)
-        self.ring_position=ring_position
+        self.position=(initial_position-ring_setting)%len(wiring)
+        self.ring_setting=ring_setting
         self.notches=notches
         super().__init__(wiring[:])
 
@@ -65,7 +65,7 @@ class Rotor (Mapping):
         return (super()._decode((letter_index+self.position)%self.size)-self.position)%self.size
     
     def is_at_notch(self) -> bool:
-        return (self.position-self.ring_position)%self.size in self.notches
+        return (self.position-self.ring_setting)%self.size in self.notches
     
     def set_position(self,new_position: int) -> None:
         '''Use the new_position according to the alphabet ring'''
@@ -73,16 +73,16 @@ class Rotor (Mapping):
             raise TypeError("new_position should be an integer")
         if new_position<0 or new_position>=self.size:
             raise ValueError("new_position out of range")
-        new_position=(new_position+self.ring_position)%self.size
+        new_position=(new_position+self.ring_setting)%self.size
         self.position=new_position
 
-    def set_ring_position(self,new_ring_position: int) -> None:
-        '''Set the alphabet ring to a new position'''
-        if not isinstance(new_ring_position,int):
-            raise TypeError("new_ring_position should be an integer")
-        if new_ring_position<0 or new_ring_position>=self.size:
-            raise ValueError("new_ring_position out of range")
-        self.ring_position=new_ring_position
+    def set_ring_setting(self,new_ring_setting: int) -> None:
+        '''Set the alphabet ring to a new position without turing the rotor'''
+        if not isinstance(new_ring_setting,int):
+            raise TypeError("new_ring_setting should be an integer")
+        if new_ring_setting<0 or new_ring_setting>=self.size:
+            raise ValueError("new_ring_setting out of range")
+        self.ring_setting=new_ring_setting
 
 
 class Reflector (Mapping):
@@ -168,6 +168,7 @@ class Plugboard (Mapping):
 
 class Enigma:
     def __init__(self,rotors:list[Rotor]|None=None,reflector:Reflector|None=None,plugboard:Plugboard|None=None) -> None:
+        '''Create an Enigma machine with a list of rotors (from left to right), a reflector, and a plugboard'''
         if rotors==None and reflector==None and plugboard==None:
             raise ValueError("You are not allowed to making a machine with nothing in it")
         if rotors==None:
@@ -206,7 +207,7 @@ class Enigma:
     
     def _step(self) -> None:
         is_engaged: bool=True
-        for rotor in self.rotors:
+        for rotor in reversed(self.rotors):
             is_at_notch: bool=rotor.is_at_notch()
             if is_at_notch or is_engaged:
                 rotor.rotate()
@@ -219,10 +220,10 @@ class Enigma:
         if input<0 or input>=self.size:
             raise ValueError("input out of range")
         output=self.plugboard.swap(input)
-        for rotor in self.rotors:
+        for rotor in reversed(self.rotors):
             output=rotor.forward(output)
         output=self.reflector.reflect(output)
-        for rotor in reversed(self.rotors):
+        for rotor in self.rotors:
             output=rotor.backward(output)
         return self.plugboard.swap(output)
 
