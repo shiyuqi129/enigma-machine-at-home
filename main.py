@@ -65,7 +65,7 @@ class Rotor (Mapping):
         return (super()._decode((letter_index+self.position)%self.size)-self.position)%self.size
     
     def is_at_notch(self) -> bool:
-        return (self.position-self.ring_setting)%self.size in self.notches
+        return (self.position+self.ring_setting)%self.size in self.notches
     
     def set_position(self,new_position: int) -> None:
         '''Use the new_position according to the alphabet ring'''
@@ -209,7 +209,7 @@ class Enigma:
         is_engaged: bool=True
         for rotor in reversed(self.rotors):
             is_at_notch: bool=rotor.is_at_notch()
-            if is_at_notch or is_engaged:
+            if (is_at_notch and rotor!=self.rotors[0]) or is_engaged:
                 rotor.rotate()
             is_engaged=is_at_notch
 
