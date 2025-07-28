@@ -25,11 +25,6 @@ class Mapping:
         if letter_index>self.size or letter_index<0:
             raise ValueError("Input out of range")
         return self.wiring.index(letter_index)
-    
-    @staticmethod
-    def read_wiring(wiring:str) -> list[int]:
-        '''Given a wiring written in string of A-Z, convert it to  a list of 0-25'''
-        return [ord(c)-ord('A') for c in wiring]
 
 
 class Rotor (Mapping):
