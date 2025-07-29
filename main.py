@@ -1,3 +1,5 @@
+import wirings
+
 class Mapping:
     def __init__(self,wiring: list[int]) -> None:
         '''Wiring should be numbers from 0-n exactly once each in any order where n is the length of wiring'''
@@ -48,8 +50,16 @@ class Rotor (Mapping):
             raise ValueError("Some of the notches are out of range")
         self.position=(initial_position-ring_setting)%len(wiring)
         self.ring_setting=ring_setting
-        self.notches=notches
-        super().__init__(wiring[:])
+        self.notches=notches[:]
+        super().__init__(wiring)
+
+    @classmethod
+    def from_name(cls,name : str,initial_position: int =0, ring_setting:int =0):
+        '''Create a rotor with the preset wiring associated with the name'''
+        try:
+            return cls(wirings.ROTOR_WIRINGS[name],wirings.ROTOR_NOTCHES[name],initial_position,ring_setting)
+        except KeyError:
+            raise ValueError(f"Rotor '{name}' not found")
 
     def rotate(self) -> None:
         '''Rotate left by 1 space'''
@@ -90,6 +100,14 @@ class Reflector (Mapping):
         if any(wiring[x]!=wiring.index(x) for x in wiring):
             raise ValueError("The wiring lead to a reflector that is not reflective")
         super().__init__(wiring)
+
+    @classmethod
+    def from_name(cls,name : str):
+        '''Create a reflector with the preset wiring associated with the name'''
+        try:
+            return cls(wirings.REFLECTOR_WIRINGS[name])
+        except KeyError:
+            raise ValueError(f"Reflector '{name}' not found")
 
     def reflect(self,letter_index: int) -> int:
         '''Given a input, return the output of the reflector'''
