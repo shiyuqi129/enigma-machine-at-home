@@ -125,11 +125,21 @@ class Plugboard (Mapping):
             raise ValueError("size must be positive integer")
         wiring=[i for i in range(size)]
         for connection in connections:
-            if not isinstance(connection,list):
-                raise TypeError("Each connection must be a list containing exatly two integer")
+            if not isinstance(connection,(list,str)):
+                raise TypeError("Each connection must be a list containing exatly two integer or string of two letters")
             if len(connection)!=2:
-                raise ValueError("Each connection must be a list containing exatly two integer")
+                raise ValueError("Each connection must be a list containing exatly two integer or string of two letters")
             i,j=connection
+            if isinstance(i,str):
+                if i.isalpha():
+                    i=ord(i.upper())-ord("A")
+                else:
+                    raise ValueError("Input string should only contain letters A-Z")
+            if isinstance(j,str):
+                if j.isalpha():
+                    j=ord(j.upper())-ord("A")
+                else:
+                    raise ValueError("Input string should only contain letters A-Z")
             if not (isinstance(i,int) and isinstance(j,int)):
                 raise TypeError("Each connection must be a list containing exatly two integer")
             if i<0 or i>=size or j<0 or j>=size:
@@ -145,35 +155,57 @@ class Plugboard (Mapping):
         return super()._encode(letter_index)
     
     def add_connection(self,i,j=None) -> None:
-        '''Add connection between i and j. Input could also be two integers, a list, or a tuple'''
+        '''Add connection between i and j. Input could also be two integers, a list, or a tuple. Also take string by converting A-Z to 0-25'''
         if j==None:
-            if not isinstance(i,(list,tuple)):
-                raise TypeError("Input must also be two integers in a list, a tuple, or seperated")
+            if not isinstance(i,(list,tuple,str)):
+                raise TypeError("Input must be two integers in a list, a tuple, seperated, or string of letters")
             if len(i)!=2:
-                raise ValueError("Input must also be exactly two integers")
+                raise ValueError("Input must be exactly two integers or letters")
             i,j=i
+        if isinstance(i,str):
+            if len(i)==1 and i.isalpha():
+                i=ord(i.upper())-ord("A")
+            else:
+                raise ValueError("Input string should only contain letters A-Z")
+        if isinstance(j,str):
+            if len(j)==1 and j.isalpha():
+                j=ord(j.upper())-ord("A")
+            else:
+                raise ValueError("Input string should only contain letters A-Z")
         if not (isinstance(i,int) and isinstance(j,int)):
-            raise TypeError("Input must be integers")
+            raise TypeError("Input must be integers or A-Z")
         if i<0 or i>=self.size or j<0 or j>=self.size:
             raise ValueError("Connection contain index out of range")
+        if i==j:
+            raise ValueError("Both end of the connection must be different position")
         if self.wiring[i]!=i or self.wiring[j]!=j:
             raise ValueError("Conflict with existing connection")
         self.wiring[i]=j
         self.wiring[j]=i
 
     def remove_connection(self,i,j=None) -> None:
-        '''Remove connection between i and j. Input could also be a list or a tuple'''
+        '''Remove connection between i and j. Input could also be two integers, a list, or a tuple. Also take string by converting A-Z to 0-25'''
         if j==None:
-            if not isinstance(i,(list,tuple)):
-                raise TypeError("Input must also be two integers in a list, a tuple, or seperated")
+            if not isinstance(i,(list,tuple,str)):
+                raise TypeError("Input must be two integers in a list, a tuple, seperated, or string of letters")
             if len(i)!=2:
-                raise ValueError("Input must also be exactly two integers")
+                raise ValueError("Input must be exactly two integers or letters")
             i,j=i
+        if isinstance(i,str):
+            if len(i)==1 and i.isalpha():
+                i=ord(i.upper())-ord("A")
+            else:
+                raise ValueError("Input string should only contain letters A-Z")
+        if isinstance(j,str):
+            if len(j)==1 and j.isalpha():
+                j=ord(j.upper())-ord("A")
+            else:
+                raise ValueError("Input string should only contain letters A-Z")
         if not (isinstance(i,int) and isinstance(j,int)):
-            raise TypeError("Input must be integers")
+            raise TypeError("Input must be integers or A-Z")
         if i<0 or i>=self.size or j<0 or j>=self.size:
             raise ValueError("Connection contain index out of range")
-        if self.wiring[i]!=j or self.wiring[j]!=i:
+        if self.wiring[i]!=j or self.wiring[j]!=i or i==j:
             raise ValueError("Non-existing connection")
         self.wiring[i]=i
         self.wiring[j]=j
