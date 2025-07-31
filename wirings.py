@@ -27,7 +27,9 @@ REFLECTOR_WIRING_STRINGS={
 }
 
 def read_wiring_string(wiring:str) -> list[int]:
-    '''Given a wiring written in string of A-Z, convert it to  a list of 0-25'''
+    '''Given a wiring written in string of A to Z, convert it to a list of integer from 0 to 25'''
+    if not isinstance(wiring,str):
+        raise TypeError("Input must be a string")
     return [ord(c.upper())-ord('A') for c in wiring if c.isalpha()]
 
 ROTOR_WIRINGS={name:read_wiring_string(wiring_string) for name,wiring_string in ROTOR_WIRING_STRINGS.items()}
