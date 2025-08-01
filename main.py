@@ -11,6 +11,7 @@ class Mapping:
             raise ValueError("Wiring should be numbers from 0-n exactly once each where n is the length of wiring")
         self.wiring=wiring[:]
         self.size=len(wiring)
+        self.name=None
 
     def _encode(self,letter_index: int) -> int:
         '''Given a number, return the result of the encoding according to the wiring.'''
@@ -57,7 +58,9 @@ class Rotor (Mapping):
     def from_name(cls,name : str,initial_position: int =0, ring_setting:int =0):
         '''Create a rotor with the preset wiring associated with the name'''
         try:
-            return cls(wirings.ROTOR_WIRINGS[name],wirings.ROTOR_NOTCHES[name],initial_position,ring_setting)
+            rotor=cls(wirings.ROTOR_WIRINGS[name],wirings.ROTOR_NOTCHES[name],initial_position,ring_setting)
+            rotor.name=name
+            return rotor
         except KeyError:
             raise ValueError(f"Rotor '{name}' not found")
 
@@ -105,7 +108,9 @@ class Reflector (Mapping):
     def from_name(cls,name : str):
         '''Create a reflector with the preset wiring associated with the name'''
         try:
-            return cls(wirings.REFLECTOR_WIRINGS[name])
+            reflector=cls(wirings.REFLECTOR_WIRINGS[name])
+            reflector.name=name
+            return reflector
         except KeyError:
             raise ValueError(f"Reflector '{name}' not found")
 
@@ -212,8 +217,30 @@ class Plugboard (Mapping):
 
     def remove_all_connection(self) -> None:
         '''Remove every connections on the plugboard'''
-        for i in range(len(self.wiring)):
+        for i in range(self.size):
             self.wiring[i]=i
+
+    def get_connections(self) -> list[tuple[int,int]]:
+        '''Return a list of all connection as tuple of two integers.
+        For example: [(0,10),(5,21)] means there are a connection between 0 and 10 and another between 5 and 21
+        A empty list indicate no connection.'''
+        connections=[]
+        for i in range(self.size):
+            if self.wiring[i]>i:
+                connections.append((i,self.wiring[i]))
+        return connections
+    
+    def get_connection_strings(self) -> list[str]:
+        '''Return a list of all connection as string.
+        For example: ["AM","YZ"] means there are a connection between A and M and another between Y and Z
+        A empty list indicate no connection.'''
+        if self.size>26:
+            raise ValueError("The plugboard has too many (more than 26) positions to be represented using A-Z")
+        connections=[]
+        for i in range(self.size):
+            if self.wiring[i]>i:
+                connections.append(chr(i+ord("A"))+chr(self.wiring[i]+ord("A")))
+        return connections
 
 
 class Enigma:
